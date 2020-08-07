@@ -32,8 +32,8 @@ def create_player(movie_path):
 
 
 def check_GPIO(input_pin_number):
-    # return GPIO.input(input_pin_number)
-    return False
+    return GPIO.input(input_pin_number)
+    # return False
 
 
 def check_dates(activation_times):
