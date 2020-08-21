@@ -8,9 +8,12 @@ from datetime import datetime
 
 PREFIX = '/home/pi/Desktop/player/'
 
+
 def read_config():
     with open(PREFIX + 'config.json') as f:
-        return json.load(f)
+        config = json.load(f)
+        print('Initialized with config:', config)
+        return config
 
 
 def setup(input_pin_number, background_path):
@@ -31,25 +34,18 @@ def create_player(movie_path):
     return player
 
 
+def play(movie_path):
+    os.system('killall omxplayer.bin')
+    omxc = Popen(['omxplayer', '-b', movie_path])
+
+
 def check_GPIO(input_pin_number):
     return GPIO.input(input_pin_number)
     # return False
 
 
-def check_dates(activation_times):
-    now = datetime.now()
-    for a in activation_times:
-        h, m = a.split(':')
-        delta =  (now.hour*3600+now.minute*60+now.second) - (int(h)*3600+int(m)*60)
-        if delta >= 0 and delta < 2:
-            return True
-    return False
-
-
 if __name__ == '__main__':
     config = read_config()
-    print('Initialized with config:', config)
-    activation_times = config["activationTimes"]
     background_path = PREFIX + config['backgroundPath']
     movie_path = PREFIX + config['moviePath']
     input_pin_number = config['inputPinNumber']
@@ -62,7 +58,7 @@ if __name__ == '__main__':
     running = True
     while running:
         try:
-            if check_GPIO(input_pin_number) or check_dates(activation_times):
+            if check_GPIO(input_pin_number):
                 player.play()
                 sleep(player.duration())
                 player.quit()
