@@ -1,11 +1,5 @@
 {
     "backgroundPath": "assets/background.png",
-    "moviePath": "assets/movie.avi",
-    "inputPinNumber": 17,
-    "activationTimes": [
-        "20:00",
-        "16:00",
-        "12:00",
-        "21:00"
-    ]
+    "moviePath": "assets/movie.mp4",
+    "inputPinNumber": 17
 }
