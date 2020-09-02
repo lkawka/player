@@ -1,12 +1,22 @@
 import RPi.GPIO as GPIO
 import os
 from subprocess import Popen
-from omxplayer.player import OMXPlayer
 from time import sleep
 import json
 from datetime import datetime
+import logging
 
 PREFIX = '/home/pi/Desktop/player/'
+
+
+def setup_logger():
+    logger = logging.getLogger('player')
+    hdlr = logging.FileHandler(PREFIX + 'player.log')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr) 
+    logger.setLevel(logging.WARNING)
+    return logger
 
 
 def read_config():
@@ -26,44 +36,31 @@ def setup(input_pin_number, background_path):
                  '-B', 'black', background_path])
 
 
-def create_player(movie_path):
-    player = OMXPlayer(movie_path)
-    player.pause()
-    player.hide_video()
-
-    return player
-
-
 def play(movie_path):
-    os.system('killall omxplayer.bin')
-    omxc = Popen(['omxplayer', '-b', movie_path])
-
-
-def check_GPIO(input_pin_number):
-    return GPIO.input(input_pin_number)
-    # return False
+    try:
+      os.system('killall omxplayer.bin')
+    finally:
+      omxc = Popen(['omxplayer', '-o', 'local', '--blank=#00FFFFFF', movie_path])
+      sleep(94)
 
 
 if __name__ == '__main__':
+    logger = setup_logger()
+    logger.info('Player started')
+
     config = read_config()
     background_path = PREFIX + config['backgroundPath']
     movie_path = PREFIX + config['moviePath']
     input_pin_number = config['inputPinNumber']
-    
-    setup(input_pin_number, background_path)
 
-    player = create_player(movie_path)
-    sleep(2.5)
+    setup(input_pin_number, background_path)
 
     running = True
     while running:
         try:
-            if check_GPIO(input_pin_number):
-                player.play()
-                sleep(player.duration())
-                player.quit()
-                player = create_player(movie_path)
+            curr_input = GPIO.input(input_pin_number)
+            if curr_input:
+              play(movie_path)
         except Exception as e:
             print(e)
-            player = create_player(movie_path)
-            sleep(2.5)
+            logger.error(e)

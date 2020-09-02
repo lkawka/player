@@ -1,50 +1,9 @@
-import logging
-import os
 import tkinter as tk
 from datetime import datetime, timedelta
-from subprocess import Popen
-from time import sleep
 
-import RPi.GPIO as GPIO
 from PIL import Image, ImageTk
 
-START_DIR = '/home/pi/Desktop/player/'
 ACTIVATIONS = ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00']
-BACKGROUND_PATH = 'assets/background.png'
-MOVIE_PATH = 'assets/movie.mp4'
-INPUT_PIN_NUMBER = 17
-
-
-def setup_logger():
-    logger = logging.getLogger('player')
-    hdlr = logging.FileHandler(START_DIR + 'player.log')
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    hdlr.setFormatter(formatter)
-    logger.addHandler(hdlr)
-    logger.setLevel(logging.WARNING)
-    return logger
-
-
-def setup(input_pin_number, background_path):
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(input_pin_number, GPIO.IN)
-    os.environ["DISPLAY"] = ":0.0"
-
-    try:
-        saver = MaglySaver(background_path, ACTIVATIONS)
-    except Exception as e:
-        print(e)
-        logger.error(e)
-        raise Exception('Cannot setup saver')
-    hide_mouse = Popen(['unclutter', '-idle', '0'])
-
-
-def play(movie_path):
-    try:
-        os.system('killall omxplayer.bin')
-    finally:
-        omxc = Popen(['omxplayer', '-o', 'local', '--blank=#00FFFFFF', movie_path])
-        sleep(94)
 
 
 def find_next_activation(hour, minute, activations):
@@ -90,7 +49,7 @@ class MaglySaver:
         img = ImageTk.PhotoImage(img)
         self.canvas.create_image(0, 0, anchor=tk.NW, image=img)
 
-        self.label_id = self.canvas.create_text(self.width / 2, self.height * 0.575, text=self.generate_label(),
+        self.label_id = self.canvas.create_text(self.width / 2, self.height*0.575, text=self.generate_label(),
                                                 fill='#cfb76e', font=('Arial', 30))
 
         self.clock_update()
@@ -115,6 +74,8 @@ class MaglySaver:
         a_datetime = curr_datetime.replace(hour=a_hour, minute=a_minute, second=0, microsecond=0)
         if a_datetime.time() < curr_datetime.time():
             a_datetime = a_datetime + timedelta(days=1)
+        print(curr_datetime)
+        print(a_datetime)
         diff = (a_datetime - curr_datetime).seconds
         hours = diff // 3600
         diff %= 3600
@@ -124,21 +85,4 @@ class MaglySaver:
 
 
 if __name__ == '__main__':
-    logger = setup_logger()
-    logger.info('Player started')
-
-    background_path = START_DIR + BACKGROUND_PATH
-    movie_path = START_DIR + MOVIE_PATH
-    input_pin_number = INPUT_PIN_NUMBER
-
-    setup(input_pin_number, background_path)
-
-    running = True
-    while running:
-        try:
-            curr_input = GPIO.input(input_pin_number)
-            if curr_input:
-                play(movie_path)
-        except Exception as e:
-            print(e)
-            logger.error(e)
+    saver = MaglySaver('assets/background.png', ACTIVATIONS)
