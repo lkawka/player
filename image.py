@@ -15,7 +15,7 @@ canvas_height = root.winfo_height()
 canvas = tk.Canvas(root, width=canvas_width, height=canvas_height, background="black", highlightthickness=0)
 canvas.pack()
 
-img = Image.open("assets/background.png")  # PIL solution
+img = Image.open("background.png")  # PIL solution
 img = img.resize((canvas_width, canvas_height))
 img = ImageTk.PhotoImage(img) # convert to PhotoImage
 # img = tk.PhotoImage(file="assets/background.png")
